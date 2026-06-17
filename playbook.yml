@@ -26,7 +26,7 @@
       args:
         chdir: "{{ app_dir }}"
 
-    # 3. Backup the MySQL Production Database
+# 3. Backup the MySQL Production Database
     - name: Create database backup file
       shell: |
-        mysqldump -h final-mysql-db -u {{ db_user }} -p{{ db_pass }} {{ db_name }} > {{ app_dir }}/backup_{{ db_name }}.sql
+        mysqldump --ssl-mode=DISABLED -h final-mysql-db -u {{ db_user }} -p{{ db_pass }} {{ db_name }} > {{ app_dir }}/backup_{{ db_name }}.sql
