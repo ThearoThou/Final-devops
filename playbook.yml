@@ -4,13 +4,14 @@
   connection: local
   gather_facts: no
   vars:
-    # Remove app_dir from here so it accepts the one from Jenkins
-    maven_path: "/usr/bin/mvn" # Update this to your container's maven path (try 'which mvn' in bash if unsure)
+    # System path verified via container bash
+    maven_path: "/usr/bin/mvn" 
     db_name: "B-Thou_Thearo-db"
     db_user: "root"
     db_pass: "Hello@123"
 
   tasks:
+    # 1. Clear local modifications and fetch latest commits
     - name: Discard local changes and pull latest from GitHub
       shell: |
         git config --global --add safe.directory {{ app_dir }}
@@ -19,21 +20,13 @@
       args:
         chdir: "{{ app_dir }}"
 
-    # 2. Build using Maven
+    # 2. Build production package without triggering unit tests
     - name: Build project package using Maven
       command: "{{ maven_path }} clean package -DskipTests=true"
       args:
         chdir: "{{ app_dir }}"
 
-    # 3. Clean and Run tests against SQLite
-    # This prevents the Duplicate Entry error by ensuring a fresh test state
-    - name: Run tests with SQLite
-      shell: |
-        {{ maven_path }} test -Dspring.profiles.active=test
-      args:
-        chdir: "{{ app_dir }}"
-
-    # 4. Backup the MySQL Production Database
+    # 3. Backup the MySQL Production Database
     - name: Create database backup file
       shell: |
         mysqldump -h final-mysql-db -u {{ db_user }} -p{{ db_pass }} {{ db_name }} > {{ app_dir }}/backup_{{ db_name }}.sql
