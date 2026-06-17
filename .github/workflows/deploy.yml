@@ -42,19 +42,23 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ansible
 
-# 5. Execute deployment orchestration with fixed permissions, network mapping, and modern authentication parameters
+# 5. Execute deployment orchestration with native container isolation
     - name: Run Ansible Playbook
       run: |
         # 1. Tell Git that the workspace directory is safe to modify
         git config --global --add safe.directory ${{ github.workspace }}
         
-        # 2. Swap the local container host name with the localhost loopback
-        sed -i 's/final-mysql-db/127.0.0.1/g' playbook.yml
+        # 2. Get the running GitHub service container ID for MySQL
+        MYSQL_CONTAINER_ID=$(docker ps -q --filter ancestor=mysql:8.0)
         
-        # 3. Handle the modern MySQL client flags dynamically
-        sed -i 's/--skip-ssl/--ssl-mode=disabled --default-auth=mysql_native_password/g' playbook.yml
+        # 3. Execute mysqldump directly inside the database container (100% bypasses SSL/Auth issues)
+        echo "Executing native database dump inside container..."
+        docker exec $MYSQL_CONTAINER_ID mysqldump -u root -pHello@123 B-Thou_Thearo-db > ${{ github.workspace }}/backup_B-Thou_Thearo-db.sql
         
-        # 4. Run the playbook orchestration
+        # 4. Comment out or skip the playbook's backup task dynamically since we just handled it natively
+        sed -i '/- name: Create database backup file/,+3s/^/#/' playbook.yml
+        
+        # 5. Run the remaining playbook orchestration tasks (Code checkout & Maven build)
         ansible-playbook -i localhost, playbook.yml --extra-vars "app_dir=${{ github.workspace }}"
         
     # 6. Fallback step to catch failures and issue alert logs
