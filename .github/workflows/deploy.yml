@@ -42,12 +42,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ansible
 
-    # 5. Execute deployment orchestration and replace network targets dynamically
+   # 5. Execute deployment orchestration with fixed permissions and network mapping
     - name: Run Ansible Playbook
       run: |
-        sed -i 's/final-mysql-db/localhost/g' playbook.yml
+        # 1. Tell Git that the workspace directory is safe to modify
+        git config --global --add safe.directory ${{ github.workspace }}
+        
+        # 2. Swap the local container host name with localhost so the cloud runner can find it
+        sed -i 's/final-mysql-db/127.0.0.1/g' playbook.yml
+        
+        # 3. Run the playbook
         ansible-playbook -i localhost, playbook.yml --extra-vars "app_dir=${{ github.workspace }}"
-
+        
     # 6. Fallback step to catch failures and issue alert logs
     - name: Send Email Alert on Failure
       if: failure()
