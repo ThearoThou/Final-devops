@@ -8,7 +8,7 @@
     maven_path: "/usr/bin/mvn" 
     db_name: "B-Thou_Thearo-db"
     db_user: "root"
-    db_pass: "Hello@123"
+    db_pass: "-pWrongPassword123"
 
   tasks:
     # 1. Clear local modifications and fetch latest commits
