@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Container 1: Web server + Spring Boot Application Runtime
+  web-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: final-web-app
+    ports:
+      - "8443:80"     # Web Server Access (Maps Nginx Port 80 outward to 8443)
+      - "2222:22"     # SSH Access Port
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/B-Thou_Thearo-db?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Hello@123
+    networks:
+      - app-network
+
+  # Container 2: Dedicated MySQL Database Core Engine Server
+  mysql-db:
+    image: mysql:8.0
+    container_name: final-mysql-db
+    environment:
+      MYSQL_DATABASE: B-Thou_Thearo-db
+      MYSQL_ROOT_PASSWORD: Hello@123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pHello@123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

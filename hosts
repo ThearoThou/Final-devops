@@ -1,0 +1,7 @@
+Ini, TOML
+
+[web_servers]
+final_app ansible_host=127.0.0.1 ansible_port=2222 ansible_user=root ansible_ssh_pass=Hello@123
+
+[web_servers:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
