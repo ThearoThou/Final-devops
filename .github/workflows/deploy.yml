@@ -1,0 +1,68 @@
+name: Java CI/CD Pipeline with Ansible
+
+on:
+  push:
+    branches: [ main ]  # Triggers the pipeline automatically on every commit to main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository code
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    # 2. Set up Java Environment for Maven
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    # 3. Build and Test the application
+    - name: Build with Maven
+      id: maven_build
+      run: mvn clean package -DskipTests=true
+
+    # 4. Set up Ansible on the cloud runner
+    - name: Install Ansible
+      if: success()
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ansible
+
+    # 5. Run the Ansible Playbook if the build passes
+    - name: Run Ansible Playbook
+      if: success()
+      run: |
+        ansible-playbook -i localhost, playbook.yml --extra-vars "app_dir=${{ github.workspace }}"
+
+    # 6. Send Email Notification only if any previous step fails
+    - name: Send Email Alert on Failure
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        # Connects securely to Gmail's SMTP server
+        server_address: smtp.gmail.com
+        server_port: 465
+        secure: true
+        
+        # Authentication credentials (stored securely in GitHub Secrets)
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        
+        subject: "ALERT: Build Error in GitHub Actions! Job: ${{ github.workflow }} [Run #${{ github.run_number }}]"
+        priority: high
+        html_body: |
+          <h3>GitHub Actions Pipeline Failure Report</h3>
+          <p><b>Repository:</b> ${{ github.repository }}</p>
+          <p><b>Branch:</b> ${{ github.ref_name }}</p>
+          <p><b>Commit Author:</b> ${{ github.actor }}</p>
+          <p><b>Workflow Run URL:</b> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}</a></p>
+          <p>Please review the workflow logs to identify and patch the failure.</p>
+          
+        # Sends to the target SRE contact and dynamically extracts the pusher's email
+        to: srengty@gmail.com, ${{ github.event.pusher.email }}
+        from: Jenkins Alert Relay <${{ secrets.MAIL_USERNAME }}>
