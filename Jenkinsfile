@@ -5,12 +5,6 @@ pipeline {
         pollSCM('*/5 * * * *')
     }
 
-    environment {
-        APP_DIR = "/app"
-        // Simply use 'mvn' as it is likely in the system PATH
-        MAVEN_BIN = "mvn"
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -20,26 +14,18 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                echo 'Executing Build and Testing Isolation Stages...'
-                // Run build using the system maven command
-                sh "${env.MAVEN_BIN} clean test -Dspring.profiles.active=test -Dmaven.test.failure.ignore=false"
+                echo 'Executing Build and Testing...'
+                // Now that we installed it, 'mvn' will be found
+                sh "mvn clean test -Dspring.profiles.active=test -Dmaven.test.failure.ignore=false"
             }
         }
 
         stage('Ansible Deploy') {
             steps {
-                echo 'Build and Test succeeded! Running Ansible Playbook to deploy...'
-                sh "ansible-playbook -i 'localhost,' ${env.APP_DIR}/playbook.yml"
+                echo 'Running Ansible Playbook...'
+                // 'ansible-playbook' will now be found
+                sh "ansible-playbook -i 'localhost,' playbook.yml"
             }
-        }
-    }
-
-    post {
-        failure {
-            echo 'Pipeline Build Error Detected!'
-        }
-        success {
-            echo 'Pipeline executed completely and successfully!'
         }
     }
 }
