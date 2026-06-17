@@ -1,0 +1,5 @@
+{
+    "java.jdt.ls.vmargs": "-javaagent:./lombok.jar -Xmx40g",
+    "lombok.enable": true,
+    "java.configuration.updateBuildConfiguration": "automatic"
+}

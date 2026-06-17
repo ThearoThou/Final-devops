@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Card Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .id-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            animation: slideUp 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .id-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .card-badge-student {
+            background: #d4edda;
+            color: #155724;
+        }
+        .card-badge-employee {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .card-badge-user {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .card-body {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        .photo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .profile-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        .photo-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            border: 4px solid #667eea;
+        }
+        
+        /* Styled Scannable Asset Layout */
+        .scannable-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+        }
+        .asset-label {
+            font-size: 10px;
+            color: #888;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .live-qr {
+            width: 110px;
+            height: 110px;
+            border: 1px solid #e1e8ed;
+            padding: 4px;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .live-barcode {
+            width: 150px;
+            height: auto;
+            background: #fff;
+            padding: 4px;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+        }
+
+        .details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .detail-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            padding: 4px 0;
+        }
+        .detail-value.code {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .card-body {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .photo-container {
+                flex-direction: row;
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .profile-photo, .photo-placeholder {
+                width: 100px;
+                height: 100px;
+            }
+            .card-footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .id-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="id-card">
+            <div class="card-header">
+                <div class="card-title">🪪 ID CARD</div>
+                <span class="card-badge" 
+                      th:classappend="'card-badge-' + ${#strings.toLowerCase(profile.profileType)}"
+                      th:text="${profile.profileType}"></span>
+            </div>
+            
+            <div class="card-body">
+                <div class="photo-container">
+                    <img th:if="${profile.photoPath}" 
+                         th:src="@{'/uploads/' + ${profile.photoPath}}" 
+                         class="profile-photo"
+                         alt="Profile photo">
+                    <div th:unless="${profile.photoPath}" class="photo-placeholder">👤</div>
+                    
+                    <div class="scannable-section">
+                        <div style="text-align: center;">
+                            <span class="asset-label">QR Verification</span>
+                            <div style="margin-top: 4px;">
+                                <img th:src="@{/id-card/qrcode/{id}(id=${profile.id})}" class="live-qr" alt="QR Code" />
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 5px;">
+                            <span class="asset-label">Asset Barcode</span>
+                            <div style="margin-top: 4px;">
+                                <img th:src="@{/id-card/barcode/{id}(id=${profile.id})}" class="live-barcode" alt="Barcode" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <span class="detail-label">ID Number</span>
+                        <span class="detail-value code" th:text="${profile.uniqueId}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Full Name</span>
+                        <span class="detail-value" th:text="${profile.firstName + ' ' + profile.lastName}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Department</span>
+                        <span class="detail-value" th:text="${profile.department}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Position/Class</span>
+                        <span class="detail-value" th:text="${profile.position ?: 'N/A'}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value" th:text="${profile.email}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value" th:text="${profile.phoneNumber ?: 'N/A'}"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Address</span>
+                        <span class="detail-value" th:text="${profile.address ?: 'N/A'}"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="/id-card/list" class="back-link">← Back to List</a>
+                <div class="actions">
+                    <a th:href="@{/id-card/pdf/{id}(id=${profile.id})}" 
+                       class="btn btn-success">📄 Download PDF</a>
+                    <a th:href="@{/id-card/create}" 
+                       class="btn btn-primary">➕ New Card</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
