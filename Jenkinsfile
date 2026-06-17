@@ -20,11 +20,11 @@ pipeline {
             }
         }
 
-        stage('Ansible Deploy') {
+stage('Ansible Deploy') {
             steps {
                 echo 'Running Ansible Playbook...'
-                // 'ansible-playbook' will now be found
-                sh "ansible-playbook -i 'localhost,' playbook.yml"
+                // Pass the current Jenkins workspace path as 'app_dir' to Ansible
+                sh "ansible-playbook -i 'localhost,' playbook.yml --extra-vars 'app_dir=${env.WORKSPACE}'"
             }
         }
     }

@@ -4,14 +4,13 @@
   connection: local
   gather_facts: no
   vars:
-    app_dir: "/app"
-    maven_path: "/root/.m2/wrapper/dists/apache-maven-3.9.16/56ba1f9f/bin/mvn"
+    # Remove app_dir from here so it accepts the one from Jenkins
+    maven_path: "/usr/bin/mvn" # Update this to your container's maven path (try 'which mvn' in bash if unsure)
     db_name: "B-Thou_Thearo-db"
     db_user: "root"
     db_pass: "Hello@123"
 
   tasks:
-    # 1. Clear local changes and pull latest code
     - name: Discard local changes and pull latest from GitHub
       shell: |
         git config --global --add safe.directory {{ app_dir }}
