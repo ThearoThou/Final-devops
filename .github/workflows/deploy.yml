@@ -21,10 +21,22 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    # 3. Build and Test the application
+# 3. Build and Test the application
     - name: Build with Maven
       id: maven_build
       run: mvn clean package -DskipTests=true
+
+    # NEW STEP: Provision a matching database service inside the cloud runner
+    - name: Start temporary MySQL Service Container
+      run: |
+        docker run -d --name final-mysql-db \
+          -e MYSQL_ROOT_PASSWORD=Hello@123 \
+          -e MYSQL_DATABASE=B-Thou_Thearo-db \
+          -p 3306:3306 \
+          mysql:latest
+        
+        # Pauses execution for 15 seconds to allow the database system to fully initialize
+        sleep 15
 
     # 4. Set up Ansible on the cloud runner
     - name: Install Ansible
@@ -38,7 +50,7 @@ jobs:
       if: success()
       run: |
         ansible-playbook -i localhost, playbook.yml --extra-vars "app_dir=${{ github.workspace }}"
-
+        
     # 6. Send Email Notification only if any previous step fails
     - name: Send Email Alert on Failure
       if: failure()
