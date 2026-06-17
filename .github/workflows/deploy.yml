@@ -42,21 +42,21 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ansible
 
-# 5. Execute deployment orchestration with fixed permissions, network mapping, and modern ssl configurations
+# 5. Execute deployment orchestration with fixed permissions, network mapping, and modern authentication parameters
     - name: Run Ansible Playbook
       run: |
         # 1. Tell Git that the workspace directory is safe to modify
         git config --global --add safe.directory ${{ github.workspace }}
         
-        # 2. Swap the local container host name with localhost loopback
+        # 2. Swap the local container host name with the localhost loopback
         sed -i 's/final-mysql-db/127.0.0.1/g' playbook.yml
         
-        # 3. Modernize the deprecated --skip-ssl flag to be compatible with newer cloud mysql clients
-        sed -i 's/--skip-ssl/--ssl-mode=disabled/g' playbook.yml
+        # 3. Handle the modern MySQL client flags dynamically
+        sed -i 's/--skip-ssl/--ssl-mode=disabled --default-auth=mysql_native_password/g' playbook.yml
         
         # 4. Run the playbook orchestration
         ansible-playbook -i localhost, playbook.yml --extra-vars "app_dir=${{ github.workspace }}"
-
+        
     # 6. Fallback step to catch failures and issue alert logs
     - name: Send Email Alert on Failure
       if: failure()
